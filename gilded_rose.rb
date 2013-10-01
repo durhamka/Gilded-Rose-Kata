@@ -1,48 +1,101 @@
+class InventoryManager
+  attr_reader :item
+
+  def initialize(item)
+    @item = item
+  end
+
+  def update_item
+    appreciate
+    depreciate
+
+    if event?
+      if approaching_event_date?
+        appreciate
+      end
+      if event_date_imminent?
+        appreciate
+      end
+    end
+
+    unless legendary?
+      age
+    end
+
+    if expired?
+      if event?
+        make_worthless
+      else
+        appreciate
+        depreciate
+      end
+    end
+  end
+
+  private
+
+  def expired?
+    item.sell_in < 0
+  end
+
+  def make_worthless
+    item.quality = 0
+  end
+
+  def event_date_imminent?
+     item.sell_in < 6
+  end
+
+  def approaching_event_date?
+     item.sell_in < 11
+  end
+
+  def appreciating_item?
+    item.name == 'Aged Brie' || event?
+  end
+
+  def depreciating_item?
+    !appreciating_item? && !legendary?
+  end
+
+  def can_appreciate?
+    appreciating_item? && item.quality < 50
+  end
+
+  def can_depreciate?
+    depreciating_item? && item.quality > 0
+  end
+
+  def appreciate
+    if can_appreciate?
+      item.quality += 1
+    end
+  end
+
+  def depreciate
+    if can_depreciate?
+      item.quality -= 1
+    end
+  end
+
+  def legendary?
+    item.name == 'Sulfuras, Hand of Ragnaros'
+  end
+
+  def age
+    item.sell_in -= 1
+  end
+
+  def event?
+    item.name == 'Backstage passes to a TAFKAL80ETC concert'
+  end
+
+end
+
 def update_quality(items)
   items.each do |item|
-    if item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert'
-      if item.quality > 0
-        if item.name != 'Sulfuras, Hand of Ragnaros'
-          item.quality -= 1
-        end
-      end
-    else
-      if item.quality < 50
-        item.quality += 1
-        if item.name == 'Backstage passes to a TAFKAL80ETC concert'
-          if item.sell_in < 11
-            if item.quality < 50
-              item.quality += 1
-            end
-          end
-          if item.sell_in < 6
-            if item.quality < 50
-              item.quality += 1
-            end
-          end
-        end
-      end
-    end
-    if item.name != 'Sulfuras, Hand of Ragnaros'
-      item.sell_in -= 1
-    end
-    if item.sell_in < 0
-      if item.name != "Aged Brie"
-        if item.name != 'Backstage passes to a TAFKAL80ETC concert'
-          if item.quality > 0
-            if item.name != 'Sulfuras, Hand of Ragnaros'
-              item.quality -= 1
-            end
-          end
-        else
-          item.quality = item.quality - item.quality
-        end
-      else
-        if item.quality < 50
-          item.quality += 1
-        end
-      end
-    end
+    inventory_manager = InventoryManager.new(item)
+    inventory_manager.update_item
   end
 end
 
